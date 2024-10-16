@@ -65,7 +65,7 @@ app = start_application() # start_application 함수를 실행시켜 서버가 �
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app",port=8000, reload=True) # python main.py로 실행 가능
+    uvicorn.run("main:app", port=8000, reload=True) # python main.py로 실행 가능
 
 '''
 간단하게 이 조건문은 현재 스크립트가 직접 실행될 때만 아래 코드를 실행하고, 다른 모듈에서 import 될 경우
