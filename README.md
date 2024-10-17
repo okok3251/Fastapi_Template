@@ -9,3 +9,6 @@ git clone 또는 Zip 파일을 다운 받아 압축 해재 후에 "반드시" **
 
 ---
  **python main.py** 명령어 또는 **uvicorn main:app --reload**를 이용하여 동작을 확인할 수 있다.
+
+---
+*** API 명세서는 *** localhost:8000/docs 로 들어가면 확인할 수 있다.
