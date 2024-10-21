@@ -32,8 +32,12 @@ def get_all_user_data(db:Session=Depends(get_db)):
             raise HTTPException(status_code=500, detail="user doesn't exists") # raise 를 통해서 에러가 났다는 것을 알게되고, except 문으로 넘어가게 됨.
         return all_users
         #return get_all_user(db)  # 바로 반환해도 문제될건 없음! 하지만 예외처리를 위해서 따로 정의 하는것
+        # 예외처리 같은 경우도 logging을 사용하면 구체적으로 할 수 있고, 쉽게 확인할 수 있다. 따로 정리를 해보겠다.
     except HTTPException as e:
-        print(f'error = {e}')
+        print(f'error = {e.detail}')
+    except Exception as e:
+        print(f'Unexpected error: {e}')
+        raise HTTPException(status_code=500, detail='Internal server error')
 '''
 get_all_user_data는 실제 요청을 처리하는 함수로 보통 엔드포인트의 url과 동일하게 사용한다.
 이 함수는 SQLAlchemy의 Session 객체라는 타입을 통해 데이터베이스에 접근할 수 있다. db:Session -> db는 Session 타입이다.
@@ -86,6 +90,40 @@ FastAPI가 자동으로 다~ 해주는 부분이기 때문에 그냥 return 문�
 그래도 굳이굳이 이렇게 써야겠고, 반환값의 타입도 지정해주고 싶다면, data를 [UserInfo(user_name = user.user_name) for user in all_users] 이런식으로 반환하면 된다.
 '''
 
+# 회원가입 로직 성공시 db에 저장되게 된다. 실제로는 비밀번호도 해싱 하여 넣어야 하지만, 간단하게 구현해보았다.
+# 나중에 domain.user를 추가하여 제대로 구현해보겠다.
 @test_router.post('/join_the_membership')
-def join_the_membership(user :UserCreate ,db:Session=Depends(get_db)):
-    return 1
+def join_the_membership(user: UserCreate, db: Session = Depends(get_db)):
+    try:
+        check_user = verify_user_existence(user.user_id, db)
+
+        if check_user:
+            raise HTTPException(status_code=400, detail='이미 해당 아이디를 사용중입니다.')
+        
+        success_regist = user_registration(user,db)
+        if not success_regist:
+            raise HTTPException(status_code=400, detail='회원가입 실패')
+        return {"message": "회원가입에 성공하였습니다."}
+    except HTTPException as e:
+        print(f'error: {e.detail}')
+        raise e 
+    except Exception as e:
+        print(f'Unexpected error: {e}')
+        raise HTTPException(status_code=500, detail='Internal server error')
+
+
+@test_router.post('/login')
+def user_login(user : UserLogin, db : Session=Depends(get_db)):
+    try:
+        check_user = user_check_for_login(user,db)
+        
+        if not check_user:
+            raise HTTPException(status_code=400, detail='로그인에 실패하였습니다.')
+        return {'message' : '로그인 성공'}
+
+    except HTTPException as e:
+        print(f'error : {e.detail}')
+        raise e
+    except Exception as e:
+        print(f'Unexpected error : {e}')
+        raise HTTPException(status_code=500, detail='Internal server error')

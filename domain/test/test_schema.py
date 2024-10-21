@@ -1,6 +1,8 @@
 from pydantic import BaseModel, field_validator
 from typing import List
 from pydantic_core.core_schema import FieldValidationInfo
+from fastapi import HTTPException
+
 
 
 
@@ -15,12 +17,13 @@ class UserLogin(BaseModel):
     user_id : str           #  user_id 속성을 str형으로 정의하고, 형에 맞게 들어오지 않으면 pydantic에 의해서 에러가 나게된다.
     password :  str
 
-    @field_validator('user_id', 'password', mode='before') # field_validator를 통해서 클래스 내부의 유효성 검사를 할 수 있다.
+    @field_validator('user_id', 'password', mode='before')          # field_validator를 통해서 클래스 내부의 유효성 검사를 할 수 있다.
     # before는 필드의 값이 모델에 실제로 할당되기 전에 유효성 검사를 수행한다는 뜻이다.
     @classmethod # 클래스 메서드 라는 것을 명시하는 부분이다. 신경쓰지 않아도 됨
     def is_not_empty(cls,v):  # cls는 지금 UserCreate 객체를 가리키는 것이고, v는 검증할 필드의 값을 나타낸다.
         if not v or not v.strip():
-            raise ValueError('빈 값은 허용되지 않음')
+            raise HTTPException(status_code=500, detail='빈 값은 허용되지 않음')
+        return v
 
 
 
@@ -28,18 +31,18 @@ class UserLogin(BaseModel):
 class UserCreate(UserLogin):
     password_check : str
     user_name: str
-    @field_validator('user_name', 'password_check', mode='before') 
+    @field_validator('user_id', 'password','user_name', 'password_check', mode='before') 
     @classmethod
     def is_not_empty(cls, v):
-        return super().is_not_empty(v) # UserLogin의 is_not_empty 함수를 상속받아서 유효성 검사를 수행하고,
+        return super().is_not_empty(v)              # UserLogin의 is_not_empty 함수를 상속받아서 유효성 검사를 수행하고,
         # UserCreate에서는 field_validator를 따로 설정해줌으로써, 두 클래스 모두 동일한 유효성 검사를 수행가능하다.
     
     @field_validator('password_check', mode='before')
     @classmethod
-    def password_match(cls, v, info:FieldValidationInfo): # FieldValidationInfo : 현재 필드의 유효성 검사와 관련된 정보를 포함한다.
-        if 'password' in info.data and v!= info.data['password']: # 여기서 v는 password_check가 되고, 결국 password와 password_check가 일치하는지를 검증
-            raise ValueError('비밀번호와 비밀번호 확인이 일치하지 않음.')
-        return v # 문제가 없으면 password_check를 return 하며 마무리 된다.
+    def password_match(cls, v, info:FieldValidationInfo):                    # FieldValidationInfo : 현재 필드의 유효성 검사와 관련된 정보를 포함한다.
+        if 'password' in info.data and v!= info.data['password']:              # 여기서 v는 password_check가 되고, 결국 password와 password_check가 일치하는지를 검증
+            raise HTTPException(status_code=500, detail='비밀번호와 비밀번호 확인이 일치하지 않음.')
+        return v                                                              # 문제가 없으면 password_check를 return 하며 마무리 된다.
 '''
 ## 개인적으로 이러한 상속 구조를 사용하지 않고, 따로 BaseMdoel을 넣어주는 것을 선호한다.
 상속 구조를 사용하기 위해 고려해야 될것이 많고, 복잡하기 때문에 일반적으론 BaseModel을 사용한다.

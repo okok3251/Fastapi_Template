@@ -64,6 +64,9 @@ def start_application(): # fastapi 애플리케이션을 설정하고 초기화 
 app = start_application() # start_application 함수를 실행시켜 서버가 실행된다.
 
 
+
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", port=8000, reload=True) # python main.py로 실행 가능
 
