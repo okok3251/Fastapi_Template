@@ -1,10 +1,10 @@
 from fastapi import APIRouter
-from domain.user.user_router import user_router
+from domain.test.test_router import test_router
 
 
 combined_router = APIRouter() # FastAPI의 라우터 클래스를 사용하여 여러 엔드포인트를 그룹화 할 수 있다.
 
-combined_router.include_router(user_router) # combined_router에 다른 라우터들을 포함시키는 구문
+combined_router.include_router(test_router) # combined_router에 다른 라우터들을 포함시키는 구문
 
 '''
 
